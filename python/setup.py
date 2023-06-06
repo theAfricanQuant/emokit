@@ -14,11 +14,7 @@ packages = [
 requirements = open("requirements.txt", "r").read().split("\n")
 system_platform = platform.system()
 
-if system_platform == "Windows":
-    requirements += ['pywinusb']
-else:
-    requirements += ['pyhidapi']
-
+requirements += ['pywinusb'] if system_platform == "Windows" else ['pyhidapi']
 setup_requirements = ['pytest-runner', ]
 setup_requirements += requirements
 test_requirements = ['pytest', ]

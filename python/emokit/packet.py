@@ -22,12 +22,11 @@ def values_at_position(byte_buffer, position=None, bits=None):
         try:
             if bits is not None:
                 unpacked = try_unpack(bits, b_format)
-            else:
-                if position is not None:
-                    unpacked = try_unpack(byte_buffer[position:position + length], b_format)
+            elif position is not None:
+                unpacked = try_unpack(byte_buffer[position:position + length], b_format)
         except:
             unpacked = "Error"
-        print('Unpacked {}: {}'.format(value_type, unpacked))
+        print(f'Unpacked {value_type}: {unpacked}')
         position_values.append(unpacked)
     print(output_format.format(position, *position_values))
 
@@ -62,10 +61,7 @@ class EmotivExtraPacket(object):
 
     def __init__(self, data, timestamp=None, verbose=False):
         self.data = data
-        if timestamp is None:
-            self.timestamp = datetime.now()
-        else:
-            self.timestamp = timestamp
+        self.timestamp = datetime.now() if timestamp is None else timestamp
         if sys.version_info >= (3, 0):
             self.raw_data = [int(bit) for bit in data]
             data = self.raw_data
@@ -93,21 +89,16 @@ class EmotivNewPacket(object):
         :param verbose - Flag for outputting debug values.
         """
 
-        if timestamp is None:
-            self.timestamp = datetime.now()
-        else:
-            self.timestamp = timestamp
+        self.timestamp = datetime.now() if timestamp is None else timestamp
         if sys.version_info >= (3, 0):
             self.raw_data = [int(byte) for byte in data]
             data = self.raw_data
-            self.counter = data[0]
+        elif type(data[0]) == str and len(data) > 1:
+            self.raw_data = [ord(byte) for byte in data]
+            data = self.raw_data
         else:
-            if type(data[0]) == str and len(data) > 1:
-                self.raw_data = [ord(byte) for byte in data]
-                data = self.raw_data
-            else:
-                self.raw_data = data
-            self.counter = data[0]
+            self.raw_data = data
+        self.counter = data[0]
         self.battery = None
 
         self.sync = self.counter == 0xe9
@@ -153,12 +144,7 @@ class EmotivNewPacket(object):
         """
         Returns custom string representation of the Emotiv Packet.
         """
-        return 'EmotivPacket(counter={}, battery={}, gyro_x={}, gyro_y={}, gyro_z={})'.format(
-            self.counter,
-            self.battery,
-            self.sensors['X']['value'],
-            self.sensors['Y']['value'],
-            self.sensors['Z']['value'])
+        return f"EmotivPacket(counter={self.counter}, battery={self.battery}, gyro_x={self.sensors['X']['value']}, gyro_y={self.sensors['Y']['value']}, gyro_z={self.sensors['Z']['value']})"
 
     def get_quality_scale(self, old_model=False):
         return get_quality_scale(self.quality_value, old_model)
@@ -184,10 +170,7 @@ class EmotivOldPacket(object):
         #    print(byte)
         #    bit_list.append(str((ord(data[byte]) & i)))
         # print(bit_list)
-        if timestamp is None:
-            self.timestamp = datetime.now()
-        else:
-            self.timestamp = timestamp
+        self.timestamp = datetime.now() if timestamp is None else timestamp
         if sys.version_info >= (3, 0):
             self.raw_data = [int(bit) for bit in data]
             data = self.raw_data
@@ -237,7 +220,7 @@ class EmotivOldPacket(object):
         self.sensors['Z']['value'] = '?'
 
         for name, bits in sensors_14_bits.items():
-            if not 'GYRO' in name:
+            if 'GYRO' not in name:
                 value = get_level(self.raw_data, bits, verbose)
                 setattr(self, name, (value,))
                 self.sensors[name]['value'] = value
@@ -269,12 +252,7 @@ class EmotivOldPacket(object):
         """
         Returns custom string representation of the Emotiv Packet.
         """
-        return 'EmotivPacket(counter={}, battery={}, gyro_x={}, gyro_y={}, gyro_z={})'.format(
-            self.counter,
-            self.battery,
-            self.sensors['X']['value'],
-            self.sensors['Y']['value'],
-            self.sensors['Z']['value'])
+        return f"EmotivPacket(counter={self.counter}, battery={self.battery}, gyro_x={self.sensors['X']['value']}, gyro_y={self.sensors['Y']['value']}, gyro_z={self.sensors['Z']['value']})"
 
     def get_quality_scale(self, old_model=False):
         return get_quality_scale(self.quality_value, old_model)

@@ -143,10 +143,8 @@ class Emotiv(object):
         print("Initializing Writer Thread(s)...")
         if self.write:
             if self.write_encrypted:
-                # Only write encrypted if we are reading encrypted.
                 if self.read_encrypted:
-                    output_path = "emotiv_encrypted_data_%s_%s.csv" % \
-                                  (self.reader.serial_number, str(datetime.now()).replace(':', '-'))
+                    output_path = f"emotiv_encrypted_data_{self.reader.serial_number}_{str(datetime.now()).replace(':', '-')}.csv"
                     if self.output_path is not None:
                         if type(self.output_path) == str:
                             output_path = path_checker(self.output_path, output_path)
@@ -154,12 +152,9 @@ class Emotiv(object):
                                                          chunk_size=self.chunk_size)
                     self.encrypted_writer.start()
 
-            # Setup decrypted data writer.
             if self.write_decrypted:
-                # If we are reading values we do not have the decrypted data,
-                # rather than reconstructing it do not write it.
                 if not self.read_values:
-                    output_path = 'emotiv_data_%s.csv' % str(datetime.now()).replace(':', '-')
+                    output_path = f"emotiv_data_{str(datetime.now()).replace(':', '-')}.csv"
                     if self.output_path is not None:
                         if type(self.output_path) == str:
                             output_path = path_checker(self.output_path, output_path)
@@ -169,7 +164,7 @@ class Emotiv(object):
 
             # Setup sensor value writer.
             if self.write_values:
-                output_path = 'emotiv_values_%s.csv' % str(datetime.now()).replace(':', '-')
+                output_path = f"emotiv_values_{str(datetime.now()).replace(':', '-')}.csv"
                 if self.output_path is not None:
                     if type(self.output_path) == str:
                         output_path = path_checker(self.output_path, output_path)
@@ -223,7 +218,7 @@ class Emotiv(object):
         :param message: Message to log/print
         """
         if self.display_output and self.verbose:
-            print("Log: %s" % message)
+            print(f"Log: {message}")
 
     def run(self):
         """ Do not call explicitly, called upon initialization of class or self.start()

@@ -86,14 +86,12 @@ class EmotivWriter(object):
                         if sys.version_info >= (3, 0):
                             # Values are int
                             data = ','.join([str(value) for value in data])
+                        elif type(data) == str:
+                            data = ','.join([str(ord(char)) for char in data])
                         else:
-                            if type(data) == str:
-                                data = ','.join([str(ord(char)) for char in data])
-                            else:
                                 # Writing encrypted.
-                                data = ','.join([char for char in data])
-                        data_to_write = ','.join([str(next_task.timestamp), data])
-                        data_to_write += '\n'
+                            data = ','.join(list(data))
+                        data_to_write = ','.join([str(next_task.timestamp), data]) + '\n'
                     if data_buffer is not None:
                         data_buffer.append(data_to_write)
                         if len(data_buffer) >= data_buffer_size - 1:
@@ -104,7 +102,7 @@ class EmotivWriter(object):
 
             except Exception as ex:
                 if self.verbose:
-                    print("Error: {}".format(ex.message))
+                    print(f"Error: {ex.message}")
             self.lock.acquire()
             if self._stop_signal:
                 print("Writer thread stopping...")

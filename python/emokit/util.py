@@ -10,9 +10,7 @@ if sys.version_info >= (3, 0):  # pragma: no cover
 
 
 def is_extra_data(data):
-    if ord(data[1]) == 32:
-        return True
-    return False
+    return ord(data[1]) == 32
 
 
 def bits(bytes):
@@ -21,20 +19,18 @@ def bits(bytes):
     :param byte: The byte from which to get the bits.
     :return: Tuple of bits in the byte param.
     """
-    value = 0
     bits_list = []
-    for byte in bytes:
+    for _ in bytes:
         # print(byte)
         bit_list = []
-        for i in range(8, -1, -1):
+        for _ in range(8, -1, -1):
             binary = ''.join(bit_list)
         bits_list.append(int(binary, 2))
-    # print()
-    bit_list = []
-    # print(''.join(map(chr, bin(bits_list[0] & bits_list[1]), 2)))
-    for i in range(8, -1, -1):
-        bit_list.append(str((ord(bin(bits_list[0] & bits_list[1])) >> i) & 1))
-    return value
+    bit_list = [
+        str((ord(bin(bits_list[0] & bits_list[1])) >> i) & 1)
+        for i in range(8, -1, -1)
+    ]
+    return 0
 
 
 def get_level(data, bits, verbose=False):
@@ -79,10 +75,7 @@ def get_gyro(data, bits, verbose=False):
     Returns sensor level value from data using sensor bit mask in micro volts (uV).
     """
 
-    # if verbose:
-    #    return detailed_get_level(data, bits)
-    level = 42
-    return level
+    return 42
 
 
 def get_level_16(data, bits, verbose=False):
@@ -109,46 +102,40 @@ def detailed_get_level(data, bits):
     """
     level = 0
     print("Begin Sensor Level Calculation")
-    print("Data: {}".format(data))
-    print("Bits: {}".format(bits))
+    print(f"Data: {data}")
+    print(f"Bits: {bits}")
     for i in range(13, -1, -1):
-        print("Iteration: {}".format(i))
-        print("Level: {}".format(level))
+        print(f"Iteration: {i}")
+        print(f"Level: {level}")
         level <<= 1
-        print("Shift left level by one by: {}".format(level))
+        print(f"Shift left level by one by: {level}")
         bit_at_index = bits[i]
-        print("Bit Index: {}".format(bit_at_index))
+        print(f"Bit Index: {bit_at_index}")
         b = (bit_at_index // 8) + 1
-        print("Floored(ABS or Integer) Quotient of bit and 8 plus one: {}".format(b))
+        print(f"Floored(ABS or Integer) Quotient of bit and 8 plus one: {b}")
         o = bit_at_index % 8
-        print("Remainder of bit and 8: {}".format(o))
+        print(f"Remainder of bit and 8: {o}")
         if sys.version_info >= (3, 0):
             data_at_bit_index_divided_by_8_plus_one = data[b]
-            print("Data at bit index divided by 8, plus one: {}".format(data_at_bit_index_divided_by_8_plus_one))
-            data_shifted_right_by_remainder = data_at_bit_index_divided_by_8_plus_one >> o
-            print("Data shifted right by remainder: {}".format(data_shifted_right_by_remainder))
-            bitwise_of_data_shifted_right_and_one = data_shifted_right_by_remainder & 1
-            print("Bitwise of data shifted right and one: {}".format(bitwise_of_data_shifted_right_and_one))
-            level |= bitwise_of_data_shifted_right_and_one
-            print("New level value with bitwise value added to level: {}".format(level))
         else:
             data_at_bit_index_divided_by_8_plus_one = ord(data[b])
-            print("Data at bit index divided by 8, plus one: {}".format(data_at_bit_index_divided_by_8_plus_one))
-            data_shifted_right_by_remainder = data_at_bit_index_divided_by_8_plus_one >> o
-            print("Data shifted right by remainder: {}".format(data_shifted_right_by_remainder))
-            bitwise_of_data_shifted_right_and_one = data_shifted_right_by_remainder & 1
-            print("Bitwise of data shifted right and one: {}".format(bitwise_of_data_shifted_right_and_one))
-            level |= bitwise_of_data_shifted_right_and_one
-            print("New level value with bitwise value added to level: {}".format(level))
-    print("Sensor level: {}".format(level))
+        data_shifted_right_by_remainder = data_at_bit_index_divided_by_8_plus_one >> o
+        bitwise_of_data_shifted_right_and_one = data_shifted_right_by_remainder & 1
+        level |= bitwise_of_data_shifted_right_and_one
+        print(
+            f"Data at bit index divided by 8, plus one: {data_at_bit_index_divided_by_8_plus_one}"
+        )
+        print(f"Data shifted right by remainder: {data_shifted_right_by_remainder}")
+        print(
+            f"Bitwise of data shifted right and one: {bitwise_of_data_shifted_right_and_one}"
+        )
+        print(f"New level value with bitwise value added to level: {level}")
+    print(f"Sensor level: {level}")
     return level
 
 
 def get_quality_scale(quality_value, old_model=False):
-    if old_model:
-        return quality_value // 540
-    else:
-        return quality_value // 1024
+    return quality_value // 540 if old_model else quality_value // 1024
 
 
 def get_quality_scale_level(quality_value, old_model=False):
@@ -159,9 +146,9 @@ def get_quality_scale_level(quality_value, old_model=False):
 
 
 def get_quality_level(quality_scale, old_model=False):
+    if quality_scale == 0:
+        return "Nothing"
     if old_model:
-        if quality_scale == 0:
-            return "Nothing"
         if quality_scale == 1:
             return "Okay"
         if quality_scale == 2:
@@ -169,8 +156,6 @@ def get_quality_level(quality_scale, old_model=False):
         if 3 == quality_scale == 4:
             return "Excellent"
     else:
-        if quality_scale == 0:
-            return "Nothing"
         if 1 == quality_scale == 2:
             return "Okay"
         if 3 == quality_scale == 4:
@@ -180,10 +165,7 @@ def get_quality_level(quality_scale, old_model=False):
 
 
 def get_quality_scale_level_color(quality_value, old_model=False):
-    if old_model:
-        quality_value = quality_value // 520
-    else:
-        quality_value = quality_value // 1024
+    quality_value = quality_value // 520 if old_model else quality_value // 1024
     return get_quality_color(quality_value, old_model)
 
 
@@ -205,17 +187,15 @@ new_color_scale = {
 
 
 def get_quality_color(quality_scale, old_model=False):
-    if old_model:
-        color = old_color_scale.get(quality_scale)
-    else:
-        color = new_color_scale.get(quality_scale, (0, 255, 0))
-    return color
+    return (
+        old_color_scale.get(quality_scale)
+        if old_model
+        else new_color_scale.get(quality_scale, (0, 255, 0))
+    )
 
 
 def is_old_model(serial_number):
-    if "GM" in serial_number[-2:]:
-        return False
-    return True
+    return "GM" not in serial_number[-2:]
 
 
 def hid_enumerate(hidapi, platform):
@@ -239,10 +219,7 @@ def hid_enumerate(hidapi, platform):
             serial_number = device.serial_number
             path = device.path
             emotiv_devices.append(device)
-    if platform != "Windows":
-        return path, serial_number
-    else:
-        return emotiv_devices
+    return (path, serial_number) if platform != "Windows" else emotiv_devices
 
 
 def print_hid_device_info_win(device):
@@ -430,20 +407,24 @@ def validate_data(data, new_format=False):
 
 
 def path_checker(user_output_path, emotiv_filename):
-    has_slash = False
-    if user_output_path[-1:] == '/' or user_output_path[-1:] == '\\':
-        has_slash = True
+    has_slash = user_output_path[-1:] in ['/', '\\']
     if has_slash:
-        output_path = "{user_specified_output_path}{emotiv_filename}". \
-            format(user_specified_output_path=user_output_path, emotiv_filename=emotiv_filename)
+        return "{user_specified_output_path}{emotiv_filename}".format(
+            user_specified_output_path=user_output_path,
+            emotiv_filename=emotiv_filename,
+        )
     else:
-        if system_platform == "Windows":
-            output_path = "{user_specified_output_path}\\{emotiv_filename}". \
-                format(user_specified_output_path=user_output_path, emotiv_filename=emotiv_filename)
-        else:
-            output_path = "{user_specified_output_path}/{emotiv_filename}". \
-                format(user_specified_output_path=user_output_path, emotiv_filename=emotiv_filename)
-    return output_path
+        return (
+            "{user_specified_output_path}\\{emotiv_filename}".format(
+                user_specified_output_path=user_output_path,
+                emotiv_filename=emotiv_filename,
+            )
+            if system_platform == "Windows"
+            else "{user_specified_output_path}/{emotiv_filename}".format(
+                user_specified_output_path=user_output_path,
+                emotiv_filename=emotiv_filename,
+            )
+        )
 
 
 values_header = "Timestamp,F3 Value,F3 Quality,FC5 Value,FC5 Quality,F7 Value,F7 Quality,T7 Value,T7 Quality,P7 Value," \
@@ -453,10 +434,10 @@ values_header = "Timestamp,F3 Value,F3 Quality,FC5 Value,FC5 Quality,F7 Value,F7
 
 def bits_to_float(b):
     print('bits to float')
-    print('b: {}'.format(b))
-    print('bj: {}'.format("".join(b)))
+    print(f'b: {b}')
+    print(f'bj: {"".join(b)}')
     b = "".join(b)
-    print('a: {}'.format(b))
+    print(f'a: {b}')
     # s = struct.pack('L', b)
     # print("s: {}".format(s))
     return struct.unpack('>d', b)[0]
