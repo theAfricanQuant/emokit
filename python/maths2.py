@@ -111,7 +111,7 @@ for byte in values:
 
 print()
 print("Sensor values")
-for sensor, bits in sensors_16_bits.items():
+for bits in sensors_16_bits.values():
     if len(bits) == 16:
         level = 0
         bit_list = []

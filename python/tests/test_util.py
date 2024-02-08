@@ -7,14 +7,11 @@ from emokit.util import values_header, writer_task_to_line
 LINE_LENGTH = 32
 
 def _create_EmotivWriterTask():
-    data = {}
     item = {"value": 1, "quality": 1}
-    header = set([head.split(" ")[0] for head in values_header.split(",")])
-    for head in header:
-        data[head] = item
+    header = {head.split(" ")[0] for head in values_header.split(",")}
+    data = {head: item for head in header}
     timestamp = "2016-12-20 14:10:49.846000"
-    next_task = EmotivWriterTask(data, timestamp=timestamp)
-    return next_task
+    return EmotivWriterTask(data, timestamp=timestamp)
 
 def test_write_task_to_line():
     next_task = _create_EmotivWriterTask()

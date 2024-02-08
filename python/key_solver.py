@@ -16,7 +16,7 @@ iv = os.urandom(AES.block_size)
 
 # Probably need to expand this and probably use a serial brute force like approach, but meh
 # Lets just see if it works.
-charset = [char for char in serial_number[-4:]]
+charset = list(serial_number[-4:])
 charset.extend(['\x00', '\x10', 'H', 'T', 'B', 'P'])
 possible_combinations = len(charset) * 16 * 16
 
@@ -29,17 +29,23 @@ def next_value():
 
 
 def random_key(serial_number):
-    keyset = [serial_number[-5], serial_number[-4], serial_number[-3], serial_number[-2], serial_number[-1]]
     # Probably need to expand this and probably use a serial brute force like approach, but meh
     # Lets just see if it works.
     emotiv_key_possiblities = ['\0', 'H', 'T', '\x10', 'B', 'P']
-    keyset.extend(emotiv_key_possiblities)
-    k = [random.choice(keyset) for value in range(0, 16)]
+    keyset = [
+        serial_number[-5],
+        serial_number[-4],
+        serial_number[-3],
+        serial_number[-2],
+        serial_number[-1],
+        *emotiv_key_possiblities,
+    ]
+    k = [random.choice(keyset) for _ in range(0, 16)]
     return AES.new(''.join(k), AES.MODE_ECB, iv), k
 
 
 def next_key(charset, previous_key):
-    k = [random.choice(charset) for value in range(0, 16)]
+    k = [random.choice(charset) for _ in range(0, 16)]
 
     return AES.new(''.join(k), AES.MODE_ECB, iv), k
 
@@ -190,16 +196,12 @@ def counter_check(file_data, cipher, swap_data=False):
 
 def unencrypted_counter_check(file_data, swap_data=True):
     counter_misses = 0
-    counter_checks = 0
     last_counter = 0
-    for line in file_data:
+    for counter_checks, line in enumerate(file_data):
         data = line.split(',')[1:]
         data = [int(value, 2) for value in data]
         data = ''.join(map(chr, data))
-        if not swap_data:
-            decrypted = data[:16] + data[16:]
-        else:
-            decrypted = data[16:] + data[:16]
+        decrypted = data[:16] + data[16:] if not swap_data else data[16:] + data[:16]
         counter = ord(decrypted[0])
         if counter != last_counter + 1:
             counter_misses += 1
@@ -207,11 +209,10 @@ def unencrypted_counter_check(file_data, swap_data=True):
             return False
         if counter_checks > 5 and counter_misses < 4:
             return True
-        counter_checks += 1
         last_counter = counter
 
 
-with open('{}'.format(filename), 'r') as encrypted_data:
+with open(f'{filename}', 'r') as encrypted_data:
     file_data = encrypted_data.readlines()
     found_looping = False
     i = 0
@@ -230,7 +231,7 @@ with open('{}'.format(filename), 'r') as encrypted_data:
 def check_key(next_check):
     new_cipher = AES.new(''.join(next_check), AES.MODE_ECB, iv)
     if counter_check(file_data, new_cipher):
-        print("Correct Key Found! {}".format(next_check))
+        print(f"Correct Key Found! {next_check}")
     sys.exit()
 
 
@@ -249,61 +250,10 @@ for key in next_value():
 
     now = datetime.now()
     if now - then > timedelta(minutes=1):
-        print("{} keys per second, last key {}".format(i - last_i / 60, key))
+        print(f"{i - last_i / 60} keys per second, last key {key}")
         last_i = i
         then = now
     time.sleep(0.00001)
 
 i += 1
-if False:
-    while not found_looping and i < 10000000:
-        cipher, key = random_key(serial_number)
-        if counter_check(file_data, cipher):
-            print("Correct Key Found! {}".format(key))
-            sys.exit()
-        i += 1
-    i = 0
-    while not found_looping and i < 10000000:
-        cipher, key = random_key(serial_number)
-        if counter_check(file_data, cipher, True):
-            print("Correct Key Found! Swap the data! {}".format(key))
-            sys.exit()
-        i += 1
-    i = 0
-    print("Dumb luck didn't work, starting brute force.")
-
-    i = 0
-    while not found_looping and i < 10000000:
-        cipher, key = random_key(serial_number)
-        if counter_check(file_data, cipher):
-            print("Correct Key Found! {}".format(key))
-            sys.exit()
-        i += 1
-    i = 0
-    while not found_looping and i < 10000000:
-        cipher, key = random_key(serial_number)
-        if counter_check(file_data, cipher, True):
-            print("Correct Key Found! Swap the data! {}".format(key))
-            sys.exit()
-        i += 1
-    i = 0
-    while not found_looping and i < 10000000:
-        cipher, key = random_key(serial_number)
-        if counter_check(file_data, cipher, True):
-            print("Correct Key Found! Swap the data! {}".format(key))
-            sys.exit()
-        i += 1
-    i = 0
-    while not found_looping and i < 13:
-        if unencrypted_counter_check(file_data, False):
-            print("Not encrypted!")
-            sys.exit()
-        i += 1
-    i = 0
-    while not found_looping and i < 13:
-        if unencrypted_counter_check(file_data, True):
-            print("Not Encrypted! Swap the data!")
-            sys.exit()
-        i += 1
-    print("Your script is terrible, try again...")
 

@@ -14,7 +14,6 @@ def bits(bytes):
     """
     value = 0
     bits_list = []
-    packed = []
     for byte in bytes:
         level = 0
         print(byte)
@@ -27,8 +26,7 @@ def bits(bytes):
         print(bit_list)
         value += level
         print(value)
-    packed.append(struct.unpack('f', struct.pack('>l', value)))
-
+    packed = [struct.unpack('f', struct.pack('>l', value))]
     print(packed)
     print("math")
     # print(packed[0][0] + packed[1][0])
@@ -68,10 +66,10 @@ print(b)
 
 def bits_to_float(b):
     print('bits to float')
-    print('b: {}'.format(b))
-    print('bj: {}'.format("".join(b)))
+    print(f'b: {b}')
+    print(f'bj: {"".join(b)}')
     b = "".join(b)
-    print('a: {}'.format(b))
+    print(f'a: {b}')
     # s = struct.pack('L', b)
     # print("s: {}".format(s))
     return struct.unpack('>d', b)[0]

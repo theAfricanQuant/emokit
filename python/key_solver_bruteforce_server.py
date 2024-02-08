@@ -13,7 +13,7 @@ iv = os.urandom(AES.block_size)
 
 # Probably need to expand this and probably use a serial brute force like approach, but meh
 # Lets just see if it works.
-charset = [char for char in serial_number[-4:]]
+charset = list(serial_number[-4:])
 charset.extend(['\x00', '\x10', 'H', 'T', 'B', 'P'])
 possible_combinations = len(charset) * 16 * 16
 
@@ -26,15 +26,13 @@ def next_value():
 
 
 def nex():
-    for value in next_value():
-        yield value
+    yield from next_value()
 
 
 def counter_check(file_data, cipher, swap_data=False):
     counter_misses = 0
-    counter_checks = 0
     last_counter = 0
-    for line in file_data:
+    for counter_checks, line in enumerate(file_data):
         data = line.split(',')[1:]
         data = [int(value, 2) for value in data]
         data = ''.join(map(chr, data))
@@ -45,43 +43,42 @@ def counter_check(file_data, cipher, swap_data=False):
         counter = ord(decrypted[0])
         # Uncomment this
         # print(counter)
-        if counter <= 127:
-            if counter != last_counter + 1:
-                counter_misses += 1
-        elif not (counter == 0 and last_counter > 127):
+        if (
+            counter <= 127
+            and counter != last_counter + 1
+            or counter > 127
+            and (counter != 0 or last_counter <= 127)
+        ):
             counter_misses += 1
         if counter_misses > 2 and counter_checks > 64:
             return False
         if counter_checks > 64 and counter_misses < 2:
             return True
-        counter_checks += 1
         last_counter = counter
 
 
-with open('{}'.format(filename), 'r') as encrypted_data:
+with open(f'{filename}', 'r') as encrypted_data:
     file_data = encrypted_data.readlines()
 
 
 def check_key(next_check):
     new_cipher = AES.new(''.join(next_check), AES.MODE_ECB, iv)
     if counter_check(file_data, new_cipher):
-        print("Correct Key Found! {}".format(next_check))
+        print(f"Correct Key Found! {next_check}")
         sys.exit()
 
 
 context = zmq.Context()
 socket = context.socket(zmq.REP)
-socket.bind('tcp://{}:{}'.format('*', 1777))
+socket.bind('tcp://*:1777')
 then = datetime.now()
-i = 0
 last_i = 0
 key_to_check = ""
 print('running')
-for value in next_value():
-    i += 1
+for i, value in enumerate(next_value(), start=1):
     now = datetime.now()
     if now - then > timedelta(minutes=1):
-        print("{} keys per second, last key {}".format((i - last_i) / 60, value))
+        print(f"{(i - last_i) / 60} keys per second, last key {value}")
         last_i = i
         then = now
     message = ""
@@ -93,7 +90,7 @@ for value in next_value():
             key_to_validate = message.split()[1]
             if check_key(key_to_validate):
                 socket.send("LGTM")
-                print("Valid Key: {}".format(key_to_validate))
+                print(f"Valid Key: {key_to_validate}")
             else:
                 socket.send("NOPE")
         else:

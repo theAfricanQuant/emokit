@@ -30,8 +30,7 @@ def get_test_data():
     |  Batt  |   None   |   N/A    |    N/A     |    N/A     |
     '''
     with open("test_package.data", "rb") as bin_data:
-        data = bin_data.read()
-        return data
+        return bin_data.read()
 
 
 def test_init():
@@ -46,5 +45,5 @@ def test_repr():
     packet = EmotivPacket(data)
 
     # tests #214
-    assert packet.battery == None
+    assert packet.battery is None
     print(packet)

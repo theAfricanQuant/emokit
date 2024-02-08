@@ -51,8 +51,6 @@ class EmotivReader(object):
             contents = self.file.read().split('\n')
             self.reader = read_csv(contents)
             self.platform = "Reader"
-        elif self.mode == 'hid':
-            self.reader = None
         else:
             self.reader = None
         self.data = Queue()
@@ -90,16 +88,16 @@ class EmotivReader(object):
         self.lock.acquire()
         while self.running:
             self.lock.release()
-            if not self.platform == 'Windows':
+            if self.platform != 'Windows':
                 try:
                     if not self._stop_signal:
                         data = read_platform[self.platform](source, new_format=self.new_format)
                         self.data.put_nowait(EmotivReaderTask(data=data, timestamp=datetime.now()))
                 except Exception as ex:
 
-                    print("Reader Error: {}".format(ex.message))
-                    # Catching StopIteration for some reason stops at the second record,
-                    #  even though there are more results.
+                    print(f"Reader Error: {ex.message}")
+                                # Catching StopIteration for some reason stops at the second record,
+                                #  even though there are more results.
             else:
                 time.sleep(0.00001)
             self.lock.acquire()
@@ -108,7 +106,7 @@ class EmotivReader(object):
                 self.running = False
         if self.file is not None:
             self.file.close()
-        if type(source) != int and type(source) != list:
+        if type(source) not in [int, list]:
             source.close()
         if self.hid is not None:
             if type(self.hid) != int:
@@ -166,7 +164,7 @@ class EmotivReader(object):
             for device in hid.find_all_hid_devices():
                 if device_is_emotiv(device, self.platform):
                     devices.append(device)
-            if len(devices) == 0:
+            if not devices:
                 print_hid_enumerate(system_platform, hid)
                 sys.exit()
             device = devices[1]
@@ -208,8 +206,7 @@ def read_csv(source):
     :return: Next row in CSV file.
     """
     while True:
-        for line in source:
-            yield line
+        yield from source
 
 
 def read_reader(source, new_format=False):

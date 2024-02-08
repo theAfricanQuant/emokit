@@ -96,9 +96,13 @@ def main():
     "emotiv_encrypted_data_UD20160103001874_2017-04-05.17-39-48.516489.csv"
     "emotiv_encrypted_data_UD20160103001874_2017-04-05.17-21-32.384061.csv"
     with Emotiv(display_output=False, verbose=False, is_research=False, force_epoc_mode=False, force_old_crypto=False,
-                input_source="emotiv_encrypted_data_UD20160103001874_2017-04-05.17-39-48.516489.csv") as emotiv:
-        for name in 'AF3 F7 F3 FC5 T7 P7 O1 O2 P8 T8 FC6 F4 F8 AF4'.split(' '):
-            graphers.append(Grapher(screen, name, len(graphers), emotiv.old_model))
+                    input_source="emotiv_encrypted_data_UD20160103001874_2017-04-05.17-39-48.516489.csv") as emotiv:
+        graphers.extend(
+            Grapher(screen, name, len(graphers), emotiv.old_model)
+            for name in 'AF3 F7 F3 FC5 T7 P7 O1 O2 P8 T8 FC6 F4 F8 AF4'.split(
+                ' '
+            )
+        )
         while emotiv.running:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:

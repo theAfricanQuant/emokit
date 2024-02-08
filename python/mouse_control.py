@@ -47,10 +47,7 @@ class WinMouse:
 
 
 def main():
-    if not platform.system() == 'Windows':
-        screen = Xlib()
-    else:
-        screen = WinMouse()
+    screen = Xlib() if platform.system() != 'Windows' else WinMouse()
     width = screen.width
     height = screen.height
 

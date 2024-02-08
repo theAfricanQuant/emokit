@@ -10,6 +10,4 @@ if __name__ == "__main__":
     with Emotiv(display_output=True, verbose=False) as headset:
         while True:
             packet = headset.dequeue()
-            if packet is not None:
-                pass
             time.sleep(0.001)

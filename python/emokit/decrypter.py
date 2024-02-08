@@ -119,14 +119,12 @@ class EmotivCrypto:
             raise ValueError("Serial number must not be None.")
         if verbose:
             print("EmotivCrypto: Serial Number - {serial_number}".format(serial_number=self.serial_number))
-        # Create and return new AES class, using the serial number and headset version.
-        if self.serial_number.startswith('UD2016') and not self.force_old_crypto:
-            if self.force_epoc_mode:
-                return AES.new(epoc_plus_crypto_key(self.serial_number), AES.MODE_ECB, iv)
-            else:
-                return AES.new(new_crypto_key(self.serial_number, self.verbose))
-        else:
+        if not self.serial_number.startswith('UD2016') or self.force_old_crypto:
             return AES.new(crypto_key(self.serial_number, self.is_research, verbose), AES.MODE_ECB, iv)
+        if self.force_epoc_mode:
+            return AES.new(epoc_plus_crypto_key(self.serial_number), AES.MODE_ECB, iv)
+        else:
+            return AES.new(new_crypto_key(self.serial_number, self.verbose))
 
     def add_task(self, data):
         """
@@ -153,9 +151,7 @@ class EmotivCrypto:
         """
         :return: If queue is not empty, return True
         """
-        if not self._decrypted_queue.empty():
-            return True
-        return False
+        return not self._decrypted_queue.empty()
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         """
